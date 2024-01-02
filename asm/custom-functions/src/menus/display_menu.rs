@@ -66,7 +66,6 @@ pub static mut DISPLAY_MENU: DisplayMenu = DisplayMenu {
     input_viewer:    false,
     link_pos_viewer: false,
 };
-
 impl DisplayMenu {
     pub fn enable() {
         unsafe { DISPLAY_MENU.state = DisplayMenuState::Main };

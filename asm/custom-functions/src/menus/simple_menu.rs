@@ -33,7 +33,11 @@ impl<const NUM_LINES: usize, const LINE_SIZE: usize> SimpleMenu<NUM_LINES, LINE_
     }
 
     pub fn set_cursor(&mut self, cursor: u32) {
-        self.current_line = cursor;
+        self.current_line = if cursor < self.line_buf.len() as u32 {
+            cursor
+        } else {
+            0
+        };
     }
 
     // Returns the new cursor pos
