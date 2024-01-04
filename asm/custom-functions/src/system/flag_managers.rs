@@ -3,6 +3,14 @@ use super::file_manager::FileManager;
 use core::ffi::{c_ushort, c_void};
 
 #[repr(C)]
+struct FlagSpace {
+    flag_ptr:   *mut u16,
+    flag_count: u16,
+    pad:        u16,
+    call_ptr:   u32,
+}
+
+#[repr(C)]
 pub struct DungeonflagManager {
     should_commit: bool,
     flagindex:     c_ushort,
@@ -13,7 +21,7 @@ pub struct StoryflagManager {
 }
 #[repr(C)]
 pub struct SceneflagManager {
-    tobefilled: u32,
+    sceneflags: FlagSpace,
 }
 #[repr(C)]
 pub struct ItemflagManager {
@@ -83,6 +91,13 @@ impl SceneflagManager {
     }
     pub fn unset_global(scn_idx: u16, flag: u16) {
         unsafe { SceneflagManager__unsetFlagGlobal(SCENEFLAG_MANAGER, scn_idx, flag) };
+    }
+    pub fn get_flags() -> *const [u16] {
+        let t = unsafe { &*SCENEFLAG_MANAGER };
+        return core::ptr::slice_from_raw_parts::<u16>(
+            t.sceneflags.flag_ptr,
+            t.sceneflags.flag_count.into(),
+        );
     }
 }
 

@@ -49,7 +49,7 @@ impl HeapMenu {
         match self.state {
             HeapMenuState::Off => {},
             HeapMenuState::Main => {
-                let mut menu = SimpleMenu::<3, 20>::new(10, 10, 10, "Heap Menu");
+                let mut menu = SimpleMenu::<3, 20>::new(10f32, 10f32, 10, "Heap Menu");
                 menu.add_entry("Root Heap MEM1");
                 menu.add_entry("Root Heap MEM2");
                 self.cursor = menu.move_cursor(self.cursor);
@@ -65,8 +65,8 @@ impl HeapMenu {
                 };
                 write_to_screen(
                     format_args!("Heap Name: {:<20}", heap_name.to_str().unwrap()),
-                    0,
-                    0,
+                    0f32,
+                    0f32,
                 );
             },
         }

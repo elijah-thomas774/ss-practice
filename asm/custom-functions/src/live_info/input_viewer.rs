@@ -54,10 +54,10 @@ pub struct InputViewer {}
 impl InputViewer {
     pub fn display() {
         let mut writer = TextWriterBase::new();
-        writer.m_char_writer.m_scale = [0.5f32, 0.5f32];
-        writer.set_position(10, 420);
-        writer.print(wchz!(u16, "Inputs: "));
+        writer.set_font_color([0xFFFFFFFF, 0xFFFFFFFF]);
+        writer.set_position(0f32, 0f32);
         writer.m_char_writer.m_scale = [0.75f32, 0.75f32];
+        writer.print(wchz!(u16, "Inputs: "));
         StickDir::display(&mut writer);
         DPadDir::display(&mut writer);
         if is_down(A) {

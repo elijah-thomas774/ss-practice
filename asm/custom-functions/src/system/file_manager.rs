@@ -141,6 +141,8 @@ extern "C" {
     fn FileManager__SaveFileAToSelected(_: *mut FileManager);
     fn FileManager__LoadSelectedToFileA(_: *mut FileManager);
     fn FileManager__GetCurrentHealth(_: *mut FileManager) -> u16;
+    static SAVE_FILE_RELATED: *const u32;
+    fn SaveFileMaybe(_: u32);
 }
 
 impl FileManager {
@@ -158,5 +160,8 @@ impl FileManager {
     }
     pub fn GetCurrentHealth() -> u16 {
         unsafe { FileManager__GetCurrentHealth(FILE_MANAGER) }
+    }
+    pub fn SaveFileToSelectedSlot() {
+        unsafe { SaveFileMaybe(*SAVE_FILE_RELATED) };
     }
 }

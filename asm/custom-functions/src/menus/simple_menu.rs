@@ -10,8 +10,8 @@ use wchar::wchz;
 // Simple menu to Interact with. Will be revised heavily propbably
 // Can control how many lines to display.
 pub struct SimpleMenu<const NUM_LINES: usize, const LINE_SIZE: usize> {
-    pub posx:         i32,
-    pub posy:         i32,
+    pub posx:         f32,
+    pub posy:         f32,
     pub max_lines:    u32,
     pub current_line: u32,
     pub heading:      WCharWriter<LINE_SIZE>,
@@ -19,7 +19,7 @@ pub struct SimpleMenu<const NUM_LINES: usize, const LINE_SIZE: usize> {
 }
 
 impl<const NUM_LINES: usize, const LINE_SIZE: usize> SimpleMenu<NUM_LINES, LINE_SIZE> {
-    pub fn new(posx: i32, posy: i32, max_lines: u32, name: &str) -> Self {
+    pub fn new(posx: f32, posy: f32, max_lines: u32, name: &str) -> Self {
         let mut heading = WCharWriter::<LINE_SIZE>::new();
         let _ = heading.write_str(&name);
         Self {
@@ -71,7 +71,7 @@ impl<const NUM_LINES: usize, const LINE_SIZE: usize> SimpleMenu<NUM_LINES, LINE_
     pub fn draw(&mut self) {
         let mut writer = TextWriterBase::new();
         // Black Font
-        writer.set_font_color([0x000000FF, 0x000000FF]);
+        writer.set_font_color([0xFFFFFFFF, 0xFFFFFFFF]);
         writer.set_position(self.posx, self.posy);
         self.heading.draw(&mut writer);
         writer.m_char_writer.m_cursor_pos[0] = 0.0f32;

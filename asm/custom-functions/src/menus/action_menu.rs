@@ -1,6 +1,7 @@
 use super::simple_menu::SimpleMenu;
 use crate::menus::main_menu::MainMenu;
 use crate::system::button::*;
+use crate::system::file_manager::FileManager;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ActionMenuState {
@@ -24,7 +25,9 @@ impl ActionMenu {
                     next_state = ActionMenuState::Off;
                 } else if is_pressed(A) {
                     match self.cursor {
-                        0 => {},
+                        0 => {
+                            next_state = ActionMenuState::Off;
+                        },
                         _ => {},
                     }
                 }
@@ -34,7 +37,7 @@ impl ActionMenu {
     }
 
     fn _display(&mut self) {
-        let mut menu = SimpleMenu::<3, 20>::new(10, 10, 10, "Action Menu");
+        let mut menu = SimpleMenu::<3, 20>::new(10f32, 10f32, 10, "Action Menu");
         menu.add_entry("Save to file");
         self.cursor = menu.move_cursor(self.cursor);
         menu.draw();

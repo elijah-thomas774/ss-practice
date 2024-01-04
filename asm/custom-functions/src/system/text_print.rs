@@ -6,6 +6,7 @@ use core::{
 };
 use wchar::wchz;
 
+use super::gx::*;
 use crate::LINK_PTR;
 
 #[repr(C)]
@@ -59,34 +60,11 @@ pub struct TextWriterBase {
     pub m_tag_processor: u32, // pointer to TagProcessor
 }
 
-#[repr(C)]
-pub struct Matrix {
-    pub mtx: [[f32; 4]; 3],
-}
-
-#[repr(C)]
-pub struct MTX44 {
-    pub mtx: [f32; 16],
-}
-
 extern "C" {
     fn FontMgr__GetFont(idx: u32) -> u32;
 
-    fn C_MTXOrtho(
-        mtx: *mut MTX44,
-        float1: f32,
-        float2: f32,
-        float3: f32,
-        float4: f32,
-        float5: f32,
-        float6: f32,
-    );
-    pub fn GXSetProjection(mtx: *mut MTX44, param2: u32);
-    pub fn PSMTXIdentity(mtx: *mut Matrix);
-    pub fn GXLoadPosMtxImm(mtx: *mut Matrix, param2: u32);
-    pub fn GXSetCurrentMtx(param1: u32);
-    pub fn GXSetAlphaCompare(compare1: u32, param2: u8, alphaop: u32, compare2: u32, param5: u8);
-    fn CharWriter__GetWidth(writer: *mut CharWriter) -> f32;
+    fn CharWriter__GetFontWidth(writer: *const CharWriter, char: u16) -> f32;
+    fn CharWriter__GetFontHeight(writer: *const CharWriter, char: u16) -> f32;
     fn CharWriter__SetupGX(writer: *mut CharWriter);
     fn CharWriter__SetupGXWithColorMapping(min: *const u32, max: *const u32);
     fn CharWriter__UpdateVertexColor(writer: *mut CharWriter);
@@ -139,21 +117,46 @@ impl TextWriterBase {
         self.m_char_writer.m_font_ptr != 0
     }
 
+    pub fn set_fixed_width(&mut self) {
+        if self.set_font(0) {
+            self.m_char_writer.m_fixed_width =
+                unsafe { CharWriter__GetFontWidth(&self.m_char_writer, b'-' as u16) };
+            self.m_char_writer.m_is_width_fixed = 1;
+        }
+    }
+
+    pub fn get_font_width(&mut self) -> f32 {
+        if self.set_font(0) {
+            return unsafe { CharWriter__GetFontWidth(&self.m_char_writer, b'-' as u16) };
+        }
+        return 0.0f32;
+    }
+    pub fn get_font_height(&mut self) -> f32 {
+        if self.set_font(0) {
+            return unsafe { CharWriter__GetFontHeight(&self.m_char_writer, b'!' as u16) };
+        }
+        return 0.0f32;
+    }
+
     // Sets position to draw
-    pub fn set_position(&mut self, posx: i32, posy: i32) {
+    pub fn set_position(&mut self, posx: f32, posy: f32) {
         // Create Matrix to draw on screen
         // [1.f,  0.f, 0.f, posx-304]
         // [0.f, -1.f, 0.f, 228-posy]
         // [0.f,  0.f, 1.f,      0.f]
         let mtx: *mut Matrix = &mut Matrix {
             mtx: [
-                [1f32, 0f32, 0f32, (posx - 304) as f32],
-                [0f32, -1f32, 0f32, (228 - posy) as f32],
+                [1f32, 0f32, 0f32, posx],
+                [0f32, 1f32, 0f32, posy],
                 [0f32, 0f32, 1f32, 0f32],
             ],
         };
 
+        let m = &mut MTX44::default();
         unsafe {
+            C_MTXOrtho(m, 0f32, 480f32, 0f32, 640f32, 0f32, 10f32);
+            GXSetProjection(m, 1);
+            GXSetViewport(0f32, 0f32, 640f32, 480f32, 0f32, 1f32);
             GXLoadPosMtxImm(mtx, 0);
             GXSetCurrentMtx(0);
         }
@@ -183,8 +186,8 @@ impl TextWriterBase {
         }
         let old_colors = self.m_char_writer.m_text_color;
         let old_cursor_pos = self.m_char_writer.m_cursor_pos;
-        // White background for readability
-        self.set_font_color([0xFFFFFFFF, 0xFFFFFFFF]);
+        // Black background for readability
+        self.set_font_color([0x000000FF, 0x000000FF]);
         unsafe {
             Print_TextWriterBase_WChar(self as *const _, string.as_ptr(), string.len() as u32);
         }
@@ -244,7 +247,7 @@ impl<const CAP: usize> WCharWriter<CAP> {
         text_writer.print(&self.buf);
     }
 
-    pub fn draw_text_at(&mut self, posx: i32, posy: i32) {
+    pub fn draw_text_at(&mut self, posx: f32, posy: f32) {
         let _ = self.buf.try_push(0);
         if let Some(last) = self.buf.last_mut() {
             *last = 0;
@@ -256,7 +259,7 @@ impl<const CAP: usize> WCharWriter<CAP> {
 }
 
 // A function made to write Directly to screen - no Questions Asked
-pub fn write_to_screen(args: Arguments<'_>, posx: i32, posy: i32) {
+pub fn write_to_screen(args: Arguments<'_>, posx: f32, posy: f32) {
     let mut writer = WCharWriter::<512>::new();
     let _ = writer.write_fmt(args);
     writer.draw_text_at(posx, posy);

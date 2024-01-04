@@ -20,6 +20,7 @@ use live_info::main::LiveInfo;
 use menus::main_menu::MainMenu;
 use message::{text_manager_set_num_args, text_manager_set_string_arg, FlowElement};
 use system::button::*;
+use system::gx::*;
 use system::text_print::write_to_screen;
 
 #[repr(C)]
@@ -160,26 +161,20 @@ fn get_start_info() -> *const StartInfo {
 }
 
 // A Common Place where Custom code can be injected to run once per frame
-// Returns whether or not to stop (0 == continue)
-// Its current by changing r31 we can stop the game :D
+// Returns whether or not to stop (1 == continue)
 #[no_mangle]
-fn custom_main_additions(in_r31: u32) -> u32 {
-    let mut ret_val = in_r31;
-
-    let menu_active = MainMenu::display();
+fn custom_main_additions() -> u32 {
     // Example menu
-    if in_r31 == 0 && menu_active {
-        ret_val = 1;
+    if MainMenu::display() {
+        return 0;
     }
 
-    if !menu_active {
-        LiveInfo::display();
-    }
+    LiveInfo::display();
 
     // Example Text
     // write_text_on_screen();
 
-    return ret_val;
+    return 1;
 }
 
 #[panic_handler]

@@ -178,10 +178,6 @@ impl WarpMenu {
             WarpState::Details => {
                 if b_pressed {
                     next_state = WarpState::Stage;
-
-                    self.selected_entrance = 0;
-                    self.selected_room = 0;
-                    self.selected_layer = 0;
                 } else if a_pressed {
                     self.warp();
                     next_state = WarpState::Off;
@@ -203,7 +199,8 @@ impl WarpMenu {
         match self.state {
             WarpState::Off => {},
             WarpState::Main => {
-                let mut menu = SimpleMenu::<{ STAGES.len() }, 25>::new(10, 10, 10, "Warp Menu");
+                let mut menu =
+                    SimpleMenu::<{ STAGES.len() }, 25>::new(10f32, 10f32, 10, "Warp Menu");
                 for stage in STAGES {
                     menu.add_entry(stage.name);
                 }
@@ -212,7 +209,7 @@ impl WarpMenu {
             },
             WarpState::Stage => {
                 let stage_ref = STAGES[self.main_cursor as usize];
-                let mut menu = SimpleMenu::<30, 25>::new(10, 10, 10, stage_ref.name);
+                let mut menu = SimpleMenu::<30, 25>::new(10f32, 10f32, 10, stage_ref.name);
                 for stage in stage_ref.stages {
                     menu.add_entry(stage.name);
                 }
@@ -220,7 +217,8 @@ impl WarpMenu {
                 menu.draw();
             },
             WarpState::Details => {
-                let mut detail_menu = SimpleMenu::<5, 25>::new(10, 10, 10, self.get_stage().name);
+                let mut detail_menu =
+                    SimpleMenu::<5, 25>::new(10f32, 10f32, 10, self.get_stage().name);
                 let (room, layer, entrance) =
                     (self.get_room(), self.get_layer(), self.get_entrance());
                 detail_menu.add_entry_args(format_args!("Room: {room}"));

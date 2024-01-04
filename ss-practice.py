@@ -112,5 +112,4 @@ if __name__ == "__main__":
     # extract.extract_game()
     patcher = GamePatcher(ROOT_PATH / "actual-extract", ROOT_PATH / "modified-extract")
     patcher.do_all_gamepatches()
-    print("Writing iso")
-    extract.repack_game(ROOT_PATH)
+    print("Done")

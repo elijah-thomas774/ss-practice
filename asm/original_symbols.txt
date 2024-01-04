@@ -89,7 +89,8 @@ main.dol:
     swprintf: 0x804d1e14
     wcslen: 0x804d1f98
     FontMgr__GetFont: 0x80053f30
-    CharWriter__GetWidth: 0x8042e610
+    CharWriter__GetFontWidth: 0x8042e610
+    CharWriter__GetFontHeight: 0x8042e670
     CharWriter__UpdateVertexColor: 0x8042eae0
     CharWriter__SetupGX: 0x8042db90
     CharWriter__SetupGXWithColorMapping: 0x8042ec30
@@ -98,41 +99,7 @@ main.dol:
     Print_TextWriterBase_WChar: 0x80432970
     Printf_TextWriterBase_WChar: 0x80432590
     GAME_FRAME: 0x80575b78
-    C_MTXOrtho: 0x803b9070
-    GXSetProjection: 0x803c2250
     PSMTXIdentity: 0x803b7f40
-    GXLoadPosMtxImm: 0x803c2350
-    GXSetCurrentMtx: 0x803c2470
-    isDpadUpPressed: 0x80059700
-    isDpadUpHeld: 0x800598e0
-    isDpadDownPressed: 0x80059720
-    isDpadDownHeld: 0x80059900
-    isDpadRightPressed: 0x80059760
-    isDpadRightHeld: 0x80059940
-    isDpadLeftPressed: 0x80059740
-    isDpadLeftHeld: 0x80059920
-    isButtonAPressed: 0x80059680
-    isButtonAHeld: 0x80059860
-    isButtonBPressed: 0x800596a0
-    isButtonBHeld: 0x80059880
-    isButtonCPressed: 0x800596c0
-    isButtonCHeld: 0x800598a0
-    isButtonZPressed: 0x800596e0
-    isButtonZHeld: 0x800598c0
-    isButtonPlusPressed: 0x800597e0
-    isButtonPlusHeld: 0x800599c0
-    isButtonMinusPressed: 0x800597c0
-    isButtonMinusHeld: 0x800599a0
-    isButton1Pressed: 0x80059780
-    isButton1Held: 0x80059960
-    isButton2Pressed: 0x800597a0
-    isButton2Held: 0x80059980
-    GXSetAlphaCompare: 0x803c0810
-    GXBegin: 0x803bd4a0
-    GXSetCullMode: 0x803bd790
-    GXFlush: 0x803bc9e0
-    GXSetVtxAttrFmt: 0x803bbfc0
-    GXSetBlendMode: 0x803c0f10
     CORE_CONTROLLER: 0x80575c58
     DirectPrint_DrawString: 0x804346c0
     DirectPrint_SetupFB: 0x80434cb0
@@ -150,6 +117,39 @@ main.dol:
     FillBufferGX__Screen: 0x804b2c50
     FileManager__SaveFileAToSelected: 0x8000e060
     FileManager__LoadSelectedToFileA: 0x8000d270
+    SAVE_FILE_RELATED: 0x80575000
+    SaveFileMaybe: 0x80014620
+    C_GAME: 0x805757b0
+    # GX Stuffs
+    C_MTXOrtho: 0x803b9070
+    GXSetProjection: 0x803c2250
+    GXLoadPosMtxImm: 0x803c2350
+    GXSetCurrentMtx: 0x803c2470
+    GX_FIFO: 0xCC008000
+    GXSetAlphaCompare: 0x803c0810
+    GXBegin: 0x803bd4a0
+    GXSetCullMode: 0x803bd790
+    GXFlush: 0x803bc9e0
+    GXSetVtxAttrFmt: 0x803bbfc0
+    GXSetBlendMode: 0x803c0f10
+    GXSetViewport: 0x803c2620
+    GXSetScissor: 0x803c2670
+    GXClearVtxDesc: 0x803bbf80
+    GXInvalidateVtxCache: 0x803bc6d0
+    GXSetNumIndStages: 0x803c00d0
+    GXSetVtxDesc: 0x803bb6d0
+    GXSetTevOp: 0x803c03a0
+    GXSetTevOrder: 0x803c08e0
+    GXSetNumTevStages: 0x803c0a40
+    GXSetNumChans: 0x803be9d0
+    GXSetNumTexGens: 0x803bc930
+    GXSetColorUpdate: 0x803c0f60
+    GXSetAlphaUpdate: 0x803c0fb0
+    GXSetZMode: 0x803c1000
+    GXSetChanCtrl: 0x803bea00
+    __GXSetIndirectMask: 0x803c0340
+    GXSetChanMatColor: 0x803be8f0
+    float_to_unsigned: 0x804c6a64
 d_a_shop_sampleNP.rel:
     SHOP_ITEMS: 0x6D8C
 d_a_obj_time_boatNP.rel:

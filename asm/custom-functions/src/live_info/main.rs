@@ -1,26 +1,22 @@
+use super::flag_info;
 use super::input_viewer::InputViewer;
 use super::link_pos_viewer::LinkPosViwer;
 
 pub struct LiveInfo {
-    input_viewer:    bool,
-    link_pos_viewer: bool,
+    pub input_viewer:      bool,
+    pub link_pos_viewer:   bool,
+    pub scene_flag_viewer: bool,
 }
 
 #[no_mangle]
 #[link_section = "data"]
-static mut LIVE_INFO: LiveInfo = LiveInfo {
-    input_viewer:    false,
-    link_pos_viewer: false,
+pub static mut LIVE_INFO: LiveInfo = LiveInfo {
+    input_viewer:      false,
+    link_pos_viewer:   false,
+    scene_flag_viewer: false,
 };
 
 impl LiveInfo {
-    pub fn set_input_viewer(active: bool) {
-        unsafe { LIVE_INFO.input_viewer = active };
-    }
-    pub fn set_link_pos_viewer(active: bool) {
-        unsafe { LIVE_INFO.link_pos_viewer = active };
-    }
-
     fn _display(&self) {
         if self.input_viewer {
             InputViewer::display();
@@ -28,9 +24,15 @@ impl LiveInfo {
         if self.link_pos_viewer {
             LinkPosViwer::display();
         }
+        if self.scene_flag_viewer {
+            flag_info::disp_scene_flags();
+        }
     }
 
     pub fn display() {
         unsafe { LIVE_INFO._display() };
     }
+}
+pub fn get_instance() -> &'static mut LiveInfo {
+    return unsafe { &mut LIVE_INFO };
 }
