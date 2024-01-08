@@ -73,8 +73,8 @@ impl HeapMenu {
     }
 }
 
-#[link_section = "data"]
 #[no_mangle]
+#[link_section = "data"]
 pub static mut HEAP_MENU: HeapMenu = HeapMenu {
     state:  HeapMenuState::Off,
     cursor: 0,

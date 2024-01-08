@@ -15,6 +15,7 @@ mod live_info;
 mod menus;
 mod message;
 mod system;
+mod utils;
 
 use live_info::main::LiveInfo;
 use menus::main_menu::MainMenu;

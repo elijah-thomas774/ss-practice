@@ -98,15 +98,10 @@ main.dol:
     __dt__TextWriterBase_WChar: 0x804318e0
     Print_TextWriterBase_WChar: 0x80432970
     Printf_TextWriterBase_WChar: 0x80432590
+    CalcStringRect_TextWriterBase_WChar: 0x80432470
     GAME_FRAME: 0x80575b78
     PSMTXIdentity: 0x803b7f40
     CORE_CONTROLLER: 0x80575c58
-    DirectPrint_DrawString: 0x804346c0
-    DirectPrint_SetupFB: 0x80434cb0
-    Console_Create: 0x80434f50
-    Console_Printf: 0x80435800
-    Console_DrawDirect: 0x804352e0
-    Console_DoDrawConsole: 0x80435130
     CURRENT_HEAP: 0x80576740
     Heap__alloc: 0x80495560
     EGG_ColorFader__draw: 0x80497ba0

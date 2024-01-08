@@ -1,8 +1,8 @@
 use crate::information::stage_info::*;
 use crate::menus::main_menu::MainMenu;
 use crate::menus::simple_menu::SimpleMenu;
-use crate::system::button::*;
 use crate::system::reloader::Reloader;
+use crate::system::{button::*, reloader};
 
 use core::ffi::CStr;
 use cstr::cstr;
@@ -105,7 +105,7 @@ impl WarpMenu {
         let forced_trial: u8 = if self.stage_selected[0] == b'S' { 1 } else { 0 };
         let transition_type = 0;
         unsafe {
-            Reloader::TriggerEntrance(
+            reloader::trigger_entrance(
                 self.stage_selected.as_ptr(),
                 room,
                 layer,
@@ -116,7 +116,7 @@ impl WarpMenu {
                 0xF,  // transition_fade_frames:  u8
                 0xFF, // param_9: u8
             );
-            Reloader::SetReloadTrigger(5);
+            reloader::set_reload_trigger(5);
         }
     }
 

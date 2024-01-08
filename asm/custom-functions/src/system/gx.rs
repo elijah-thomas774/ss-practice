@@ -1,4 +1,5 @@
 #![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
 use core::ffi::c_void;
 #[repr(C)]
@@ -510,10 +511,27 @@ pub struct MTX44 {
     pub mtx: [f32; 16],
 }
 
-#[repr(C)]
-pub union GXFifo {
-    uint:  u32,
-    float: f32,
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
+}
+impl Color {
+    pub fn from_u32(clr: u32) -> Self {
+        Self {
+            r: (clr >> 24) as _,
+            g: (clr >> 16) as _,
+            b: (clr >> 08) as _,
+            a: (clr >> 00) as _,
+        }
+    }
+    pub fn as_u32(&self) -> u32 {
+        return ((self.r as u32) << 24)
+            | ((self.g as u32) << 16)
+            | ((self.b as u32) << 8)
+            | ((self.a as u32) << 0);
+    }
 }
 
 extern "C" {

@@ -141,9 +141,9 @@ impl TextWriterBase {
     // Sets position to draw
     pub fn set_position(&mut self, posx: f32, posy: f32) {
         // Create Matrix to draw on screen
-        // [1.f,  0.f, 0.f, posx-304]
-        // [0.f, -1.f, 0.f, 228-posy]
-        // [0.f,  0.f, 1.f,      0.f]
+        // [1.f, 0.f, 0.f, posx]
+        // [0.f, 1.f, 0.f, posy]
+        // [0.f, 0.f, 1.f,  0.f]
         let mtx: *mut Matrix = &mut Matrix {
             mtx: [
                 [1f32, 0f32, 0f32, posx],

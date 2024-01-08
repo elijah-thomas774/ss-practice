@@ -33,33 +33,32 @@ extern "C" {
     );
 }
 
-impl Reloader {
-    pub fn SetReloadTrigger(trigger: u8) {
-        unsafe { Reloader__setReloadTrigger(RELOADER_PTR, trigger) };
-    }
-    pub fn TriggerEntrance(
-        stage_name: *const u8,
-        room: u8,
-        layer: u8,
-        entrance: u8,
-        forced_night: u8,
-        forced_trial: u8,
-        transition_type: u8,
-        transition_fade_frames: u8,
-        param_9: u8,
-    ) {
-        unsafe {
-            actuallyTriggerEntrance(
-                stage_name,
-                room,
-                layer,
-                entrance,
-                forced_night,
-                forced_trial,
-                transition_type,
-                transition_fade_frames,
-                param_9,
-            )
-        };
-    }
+pub fn set_reload_trigger(trigger: u8) {
+    unsafe { Reloader__setReloadTrigger(RELOADER_PTR, trigger) };
+}
+
+pub fn trigger_entrance(
+    stage_name: *const u8,
+    room: u8,
+    layer: u8,
+    entrance: u8,
+    forced_night: u8,
+    forced_trial: u8,
+    transition_type: u8,
+    transition_fade_frames: u8,
+    param_9: u8,
+) {
+    unsafe {
+        actuallyTriggerEntrance(
+            stage_name,
+            room,
+            layer,
+            entrance,
+            forced_night,
+            forced_trial,
+            transition_type,
+            transition_fade_frames,
+            param_9,
+        )
+    };
 }
