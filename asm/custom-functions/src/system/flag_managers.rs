@@ -52,7 +52,7 @@ extern "C" {
     fn StoryflagManager__doCommit(mgr: *mut StoryflagManager);
     fn ItemflagManager__doCommit(mgr: *mut ItemflagManager);
     fn checkStoryflagIsSet(p: *const StoryflagManager, flag: u16) -> bool;
-    fn checkItemFlag(flag: u16) -> bool;
+    fn AcItem__checkItemFlag(flag: u16) -> bool;
 
 }
 
@@ -74,7 +74,7 @@ impl StoryflagManager {
 
 impl ItemflagManager {
     pub fn check(flag: u16) -> bool {
-        unsafe { checkItemFlag(flag) }
+        unsafe { AcItem__checkItemFlag(flag) }
     }
 
     pub fn set_to_value(flag: u16, value: u16) {

@@ -1,4 +1,4 @@
-main.dol: 0x806782C0
+main.dol: 0x8067b540
 d_a_asura_bulletNP.rel: 0x1B08
 d_a_avater_bulletNP.rel: 0x1788
 d_a_avater_race_mngNP.rel: 0x1868

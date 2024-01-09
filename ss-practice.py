@@ -47,7 +47,7 @@ class GamePatcher:
         with (ROOT_PATH / "asm" / "custom_symbols.txt").open("r") as f:
             self.custom_symbols = yaml.safe_load(f)
         self.main_custom_symbols = self.custom_symbols.get("main.dol", {})
-        with (ROOT_PATH / "asm" / "original_symbols.txt").open("r") as f:
+        with (ROOT_PATH / "asm" / "original_symbols_jp.txt").open("r") as f:
             self.original_symbols = yaml.safe_load(f)
         self.main_original_symbols = self.original_symbols.get("main.dol", {})
 
@@ -109,7 +109,7 @@ class GamePatcher:
 
 if __name__ == "__main__":
     extract = ExtractManager(ROOT_PATH)
-    # extract.extract_game()
-    patcher = GamePatcher(ROOT_PATH / "actual-extract", ROOT_PATH / "modified-extract")
+    # extract.extract_game("D:\\Dolphin_Games\\games\\SOUJ01.iso")
+    patcher = GamePatcher(ROOT_PATH / "actual-extract-jp", ROOT_PATH / "modified-extract-jp")
     patcher.do_all_gamepatches()
     print("Done")

@@ -26,7 +26,7 @@ main.dol:
     # storyflag in r4
     checkStoryflagIsSet: 0x80141e90
     # r3 itemid, r4 pouch slot index or -1, r5 always 0
-    giveItem: 0x80249210
+    AcItem__giveItem: 0x80249210
     # lwz r3,-0x4444(r13) ; FILE_MANAGER
     FILE_MANAGER: 0x80574ffc
     FileManager__getDungeonFlags: 0x8000a460
@@ -54,12 +54,12 @@ main.dol:
     SPECIAL_MINIGAME_STATE: 0x80572250
     findActorByActorType: 0x802e2920
     getKeyPieceCount: 0x802522f0
-    checkItemFlag: 0x80251da0
+    AcItem__checkItemFlag: 0x80251da0
     TextManager__setNumericArgs: 0x800b8a60
     TextManager__setStringArg: 0x800b7fa0
     requestFileLoadFromDisk: 0x802f0060
     AcOTBox__initDowsingTarget: 0x8026d780
-    copyFileBToCurrent: 0x8000d9c0
+    FileManager__copyFileBToCurrent: 0x8000d9c0
     getAnmTexPatFromBrres: 0x80439890
     AnmTexPatControl__bind: 0x802e6840
     AnmTexPatControl__setFrame: 0x802e6e50
@@ -69,7 +69,7 @@ main.dol:
     allocOnCurrentHeap: 0x80054ec0
     # counterId, count
     increaseCounter: 0x8016d710
-    setFlagForItem: 0x80251ca0
+    AcItem__setFlagForItem: 0x80251ca0
     getModelDataFromOarc: 0x80069b30
     checkXZDistanceFromLink: 0x8002d3e0
     ITEM_GET_BOTTLE_POUCH_SLOT: 0x8057398c

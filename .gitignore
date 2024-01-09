@@ -163,8 +163,8 @@ temp
 wit-v3.03a-r8245-*
 
 # more game files
-actual-extract
-modified-extract
+actual-extract*
+modified-extract*
 
 # rando generated
 spoiler.txt

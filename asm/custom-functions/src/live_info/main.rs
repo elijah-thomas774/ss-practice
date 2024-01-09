@@ -17,6 +17,7 @@ pub static mut LIVE_INFO: LiveInfo = LiveInfo {
 };
 
 impl LiveInfo {
+    #[allow(dead_code)]
     fn _display(&self) {
         if self.input_viewer {
             InputViewer::display();

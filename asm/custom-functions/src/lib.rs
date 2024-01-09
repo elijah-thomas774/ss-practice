@@ -17,7 +17,7 @@ mod message;
 mod system;
 mod utils;
 
-use live_info::main::LiveInfo;
+use live_info::{link_pos_viewer, main::LiveInfo};
 use menus::main_menu::MainMenu;
 use message::{text_manager_set_num_args, text_manager_set_string_arg, FlowElement};
 use system::button::*;
@@ -122,7 +122,7 @@ extern "C" {
     static mut SPAWN_SLAVE: SpawnStruct;
     static LINK_PTR: *mut ActorLink;
     fn increaseCounter(counterId: u16, count: u16);
-    fn setFlagForItem(itemflag: u16);
+    fn AcItem__setFlagForItem(itemflag: u16);
     fn getModelDataFromOarc(oarc_mgr: *const c_void, oarc_str: *const c_char) -> *const c_void;
     static INPUT_BUFFER: u32;
     fn findActorByActorType(actor_type: i32, start_actor: *const c_void) -> *mut c_void;
@@ -155,12 +155,6 @@ fn simple_rng(rng: &mut u32) -> u32 {
     *rng
 }
 
-#[no_mangle]
-fn get_start_info() -> *const StartInfo {
-    // this is where the start entrance info is patched
-    return unsafe { &*(0x802DA0E0 as *const StartInfo) };
-}
-
 // A Common Place where Custom code can be injected to run once per frame
 // Returns whether or not to stop (1 == continue)
 #[no_mangle]
@@ -171,9 +165,6 @@ fn custom_main_additions() -> u32 {
     }
 
     LiveInfo::display();
-
-    // Example Text
-    // write_text_on_screen();
 
     return 1;
 }

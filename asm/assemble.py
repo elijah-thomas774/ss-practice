@@ -61,7 +61,7 @@ print()
 custom_symbols = OrderedDict()
 custom_symbols["main.dol"] = OrderedDict()
 
-with open("original_symbols.txt", "r") as f:
+with open("original_symbols_jp.txt", "r") as f:
     original_symbols = yaml.safe_load(f)
 
 with open("free_space_start_offsets.txt", "r") as f:
@@ -167,7 +167,8 @@ def try_apply_local_relocation(bin_name, elf_relocation, elf_symbol):
 
 
 SDA_RE = re.compile(r"([a-z]+) (r[0-9]+), *([a-zA-Z0-9_]+)@sda21 *\(r13\).*")
-SDA_13_BASE = 0x80579440
+# SDA_13_BASE = 0x80579440 # US 1.0
+SDA_13_BASE = 0x8057c6a0 # JP 1.0
 SDA_13_MAX = SDA_13_BASE + 0x7FFF
 SDA_13_MIN = SDA_13_BASE - 0x8000
 
@@ -225,7 +226,7 @@ try:
             line = line.strip()
 
             open_file_match = re.match(r"\.open\s+\"([^\"]+)\"$", line, re.IGNORECASE)
-            org_match = re.match(r"\.org\s+0x([0-9a-f]+)$", line, re.IGNORECASE)
+            org_match = re.match(r"\.org\s+(0x[0-9a-f]+|@MainInjection)$", line, re.IGNORECASE)
             org_symbol_match = re.match(
                 r"\.org\s+([\._a-z][\._a-z0-9]+|@NextFreeSpace)$", line, re.IGNORECASE
             )
@@ -251,7 +252,13 @@ try:
                 if not most_recent_file_path:
                     raise Exception("Found .org directive when no file was open.")
 
-                org_offset = int(org_match.group(1), 16)
+                org_symbol = org_match.group(1)
+
+                if org_symbol == "@MainInjection":
+                    org_symbol = "0x80062f40" # JP: 0x80062f40, US: 0x80062e60
+                
+                org_offset = int(org_symbol, 16)
+
                 if org_offset >= free_space_start_offsets[most_recent_file_path]:
                     raise Exception(
                         'Tried to manually set the origin point to after the start of free space.\n.org offset: 0x%X\nFile path: %s\n\nUse ".org @NextFreeSpace" instead to get an automatically assigned free space offset.'
