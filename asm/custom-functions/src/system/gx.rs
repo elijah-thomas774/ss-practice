@@ -1,7 +1,9 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
-
+#![allow(unused)]
 use core::ffi::c_void;
+
+use super::math::{Matrix34f, Matrix44f};
 #[repr(C)]
 pub enum GXPrimitive {
     GX_QUADS         = 0x80, // 0x80
@@ -500,17 +502,7 @@ pub enum GXClipMode {
     GX_CLIP_DISABLE, // 0x1
 }
 
-#[repr(C)]
-pub struct Matrix {
-    pub mtx: [[f32; 4]; 3],
-}
-
-#[repr(C)]
-#[derive(Default)]
-pub struct MTX44 {
-    pub mtx: [f32; 16],
-}
-
+#[derive(Clone, Copy)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -535,17 +527,7 @@ impl Color {
 }
 
 extern "C" {
-    pub fn C_MTXOrtho(
-        m: *mut MTX44,
-        top: f32,
-        bottom: f32,
-        left: f32,
-        right: f32,
-        near: f32,
-        far: f32,
-    );
-    pub fn PSMTXIdentity(mtx: *mut Matrix);
-    pub fn GXSetProjection(mtx: *const MTX44, _: u32);
+    pub fn GXSetProjection(mtx: *const Matrix44f, _: u32);
     pub fn GXSetViewport(
         x_orig: f32,
         y_orig: f32,
@@ -557,10 +539,16 @@ extern "C" {
     pub fn GXSetScissor(left: u32, top: u32, width: u32, height: u32);
     pub fn GXBegin(_: GXPrimitive, _: GXVtxFmt, _: u16);
     pub fn GXSetVtxAttrFmt(_: GXVtxFmt, _: GXAttr, _: GXCompCnt, _: GXCompType, _: u8);
-    pub fn GXLoadPosMtxImm(mtx: *mut Matrix, id: u32);
+    pub fn GXLoadPosMtxImm(mtx: *mut Matrix34f, id: u32);
     pub fn GXSetCurrentMtx(id: u32);
     pub fn GXInvalidateVtxCache();
-    pub fn GXSetAlphaCompare(compare1: u32, param2: u8, alphaop: u32, compare2: u32, param5: u8);
+    pub fn GXSetAlphaCompare(
+        compare1: GXCompare,
+        param2: u8,
+        alphaop: GXAlphaOp,
+        compare2: GXCompare,
+        param5: u8,
+    );
     pub fn GXSetNumIndStages(num: u8);
     pub fn GXSetVtxDesc(_: GXAttr, _: GXAttrType);
     pub fn GXClearVtxDesc();

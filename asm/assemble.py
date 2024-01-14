@@ -61,7 +61,7 @@ print()
 custom_symbols = OrderedDict()
 custom_symbols["main.dol"] = OrderedDict()
 
-with open("original_symbols_jp.txt", "r") as f:
+with open("original_symbols.txt", "r") as f:
     original_symbols = yaml.safe_load(f)
 
 with open("free_space_start_offsets.txt", "r") as f:
@@ -167,8 +167,8 @@ def try_apply_local_relocation(bin_name, elf_relocation, elf_symbol):
 
 
 SDA_RE = re.compile(r"([a-z]+) (r[0-9]+), *([a-zA-Z0-9_]+)@sda21 *\(r13\).*")
-# SDA_13_BASE = 0x80579440 # US 1.0
-SDA_13_BASE = 0x8057c6a0 # JP 1.0
+SDA_13_BASE = 0x80579440 # US 1.0
+# SDA_13_BASE = 0x8057c6a0 # JP 1.0
 SDA_13_MAX = SDA_13_BASE + 0x7FFF
 SDA_13_MIN = SDA_13_BASE - 0x8000
 
@@ -255,7 +255,7 @@ try:
                 org_symbol = org_match.group(1)
 
                 if org_symbol == "@MainInjection":
-                    org_symbol = "0x80062f40" # JP: 0x80062f40, US: 0x80062e60
+                    org_symbol = "0x80062e60" # JP: 0x80062f40, US: 0x80062e60
                 
                 org_offset = int(org_symbol, 16)
 

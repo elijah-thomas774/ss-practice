@@ -2,6 +2,22 @@
 use core::ffi::c_void;
 
 #[repr(C)]
+pub struct SpawnStruct {
+    pub name:                   [u8; 32],
+    pub transition_fade_frames: u16,
+    pub room:                   u8,
+    pub layer:                  u8,
+    pub entrance:               u8,
+    pub night:                  u8,
+    pub trial:                  u8,
+    pub transition_type:        u8,
+    pub field8_0x28:            u8,
+    pub field9_0x29:            u8,
+    pub field10_0x2a:           u8,
+    pub field11_0x2b:           u8,
+}
+
+#[repr(C)]
 pub struct Reloader {
     _0:                        [u8; 0x290],
     initial_speed:             f32,
@@ -17,6 +33,7 @@ pub struct Reloader {
 }
 
 extern "C" {
+    static mut SPAWN_SLAVE: SpawnStruct;
     static mut RELOADER_PTR: *mut Reloader;
     fn RoomManager__getRoomByIndex(room_mgr: *mut c_void, room_number: u32);
     fn Reloader__setReloadTrigger(reloader: *mut Reloader, trigger: u8);
@@ -31,6 +48,14 @@ extern "C" {
         transition_fade_frames: u8,
         param_9: u8,
     );
+}
+
+pub fn get_ptr() -> *mut Reloader {
+    unsafe { RELOADER_PTR }
+}
+
+pub fn get_spawn_slave() -> &'static mut SpawnStruct {
+    return unsafe { &mut SPAWN_SLAVE };
 }
 
 pub fn set_reload_trigger(trigger: u8) {

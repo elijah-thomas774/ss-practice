@@ -1,6 +1,13 @@
-use core::fmt::Write;
+use core::fmt::{Arguments, Write};
 
-use crate::system::gx::*;
+use crate::system::{
+    gx::*,
+    math::{C_MTXOrtho, Matrix34f, Matrix44f},
+};
+
+// Background Color Saved
+#[link_section = "data"]
+static mut BACKGROUND_COLOR: [u32; 2] = [0x000000FF; 2];
 
 #[repr(C)]
 #[derive(Default)]
@@ -33,10 +40,10 @@ pub struct TextWriterBase {
 
 #[repr(C)]
 pub struct Rect {
-    left:   f32,
-    top:    f32,
-    right:  f32,
-    bottom: f32,
+    pub left:   f32,
+    pub top:    f32,
+    pub right:  f32,
+    pub bottom: f32,
 }
 
 extern "C" {
@@ -51,6 +58,7 @@ extern "C" {
     fn __dt__TextWriterBase_WChar(writer: *mut TextWriterBase, _: i32);
     fn Printf_TextWriterBase_WChar(writer: *mut TextWriterBase, str: *const u16, ...);
     fn Print_TextWriterBase_WChar(writer: *const TextWriterBase, str: *const u16, len: u32);
+    fn PrintMutable_TextWriterBase_WChar(writer: *const TextWriterBase, str: *const u16, len: u32);
     fn CalcStringRect_TextWriterBase_WChar(
         writer: *const TextWriterBase,
         rect: *mut Rect,
@@ -75,7 +83,7 @@ impl TextWriterBase {
         // Configure Color + Scale
         text_writer.char_writer.scale = [0.5f32, 0.5f32];
         text_writer.char_writer.text_gradation = 2;
-        text_writer.set_font_color([0x000000FF, 0x000000FF]);
+        text_writer.set_font_color(0x000000FF, 0x000000FF);
         text_writer.char_writer.color_mapping[0] = 0x00000000;
         text_writer.char_writer.color_mapping[1] = 0xFFFFFFFF;
         text_writer
@@ -109,21 +117,25 @@ impl TextWriterBase {
         return 0.0f32;
     }
 
+    pub fn set_scale(&mut self, scale: f32) {
+        self.char_writer.scale = [scale; 2];
+    }
+
     // Sets position to draw
     pub fn set_position(&mut self, posx: f32, posy: f32) {
         // Create Matrix to draw on screen
-        // [1.f,  0.f, 0.f, posx-304]
-        // [0.f, -1.f, 0.f, 228-posy]
-        // [0.f,  0.f, 1.f,      0.f]
-        let mtx: *mut Matrix = &mut Matrix {
-            mtx: [
+        // [1.f, 0.f, 0.f, posx]
+        // [0.f, 1.f, 0.f, posy]
+        // [0.f, 0.f, 1.f,  0.f]
+        let mtx: *mut Matrix34f = &mut Matrix34f {
+            m: [
                 [1f32, 0f32, 0f32, posx],
                 [0f32, 1f32, 0f32, posy],
                 [0f32, 0f32, 1f32, 0f32],
             ],
         };
 
-        let m = &mut MTX44::default();
+        let m = &mut Matrix44f::default();
         unsafe {
             C_MTXOrtho(m, 0f32, 480f32, 0f32, 640f32, 0f32, 10f32);
             GXSetProjection(m, 1);
@@ -135,38 +147,61 @@ impl TextWriterBase {
         self.char_writer.cursor_pos = [0.0f32; 3];
     }
 
+    // Sets the cursor Position
+    pub fn set_cursor(&mut self, pos: [f32; 3]) {
+        self.char_writer.cursor_pos = pos;
+    }
+
+    pub fn get_cursor(&self) -> [f32; 3] {
+        self.char_writer.cursor_pos
+    }
+
     // Sets the font colors
     // Set both to the same to make it a solid color
     // will vertically gradient it
-    pub fn set_font_color(&mut self, colors: [u32; 2]) {
-        self.char_writer.text_color[0] = colors[0];
-        self.char_writer.text_color[1] = colors[1];
+    pub fn set_font_color(&mut self, color1: u32, color2: u32) {
+        self.char_writer.text_color[0] = color1;
+        self.char_writer.text_color[1] = color2;
         unsafe {
-            CharWriter__UpdateVertexColor(&mut self.char_writer as *mut _);
+            CharWriter__UpdateVertexColor(&mut self.char_writer as _);
         }
     }
 
     // Prints text directly to screen
     pub fn print(&mut self, string: &[u16]) {
+        // Set to default font
         if !self.set_font(0) {
             return;
         }
+
+        // Setup GX Stuffs
         unsafe {
             CharWriter__SetupGX(&mut self.char_writer);
-            GXSetAlphaCompare(7, 0, 0, 7, 0);
+            GXSetAlphaCompare(
+                GXCompare::GX_ALWAYS,
+                0,
+                GXAlphaOp::GX_AOP_AND,
+                GXCompare::GX_ALWAYS,
+                0,
+            );
         }
+
+        // Save Colors and Background
         let old_colors = self.char_writer.text_color;
         let old_cursor_pos = self.char_writer.cursor_pos;
+
         // Black background for readability
-        self.set_font_color([0x000000FF, 0x000000FF]);
-        unsafe {
-            Print_TextWriterBase_WChar(self as *const _, string.as_ptr(), string.len() as u32);
-        }
+        unsafe { self.set_font_color(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1]) };
+
+        // Print The Background
+        unsafe { Print_TextWriterBase_WChar(self as *const _, string.as_ptr(), string.len() as _) };
+
+        // Restore old position and Color
         self.char_writer.cursor_pos = old_cursor_pos;
-        self.set_font_color(old_colors);
-        unsafe {
-            Print_TextWriterBase_WChar(self as *const _, string.as_ptr(), string.len() as u32);
-        }
+        self.set_font_color(old_colors[0], old_colors[1]);
+
+        // Print the foreground
+        unsafe { Print_TextWriterBase_WChar(self as *const _, string.as_ptr(), string.len() as _) };
     }
 
     // Prints symbols directly to screen
@@ -175,29 +210,34 @@ impl TextWriterBase {
             return;
         }
         let old_colors = self.char_writer.text_color;
-        self.set_font_color([0xFFFFFFFF, 0xFFFFFFFF]);
+        self.set_font_color(0xFFFFFFFF, 0xFFFFFFFF);
         self.char_writer.text_gradation = 0;
         unsafe {
             CharWriter__SetupGX(&mut self.char_writer);
-            GXSetAlphaCompare(7, 0, 0, 7, 0);
+            GXSetAlphaCompare(
+                GXCompare::GX_ALWAYS,
+                0,
+                GXAlphaOp::GX_AOP_AND,
+                GXCompare::GX_ALWAYS,
+                0,
+            );
         }
         unsafe {
             Print_TextWriterBase_WChar(self as *const _, string.as_ptr(), string.len() as u32);
         }
-        self.set_font_color(old_colors);
+        self.set_font_color(old_colors[0], old_colors[1]);
         self.char_writer.text_gradation = 2;
     }
 }
 
-pub struct CharWriter {
+pub struct CharWriter<const BUFFER_SIZE: usize> {
     font_color:  Color,
     bg_color:    Color,
     fixed_width: bool,
-    writer:      *mut TextWriterBase,
-    buffer:      arrayvec::ArrayVec<u16, 512>,
+    pub buffer:  arrayvec::ArrayVec<u16, BUFFER_SIZE>,
 }
 
-impl Write for CharWriter {
+impl<const BUFFER_SIZE: usize> Write for CharWriter<BUFFER_SIZE> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         for c in s.encode_utf16() {
             self.buffer.try_push(c).map_err(|_| core::fmt::Error)?;
@@ -206,20 +246,16 @@ impl Write for CharWriter {
     }
 }
 
-impl CharWriter {
+impl<const BUFFER_SIZE: usize> CharWriter<BUFFER_SIZE> {
     pub fn new() -> Self {
         Self {
             font_color:  Color::from_u32(0xFFFFFFFF),
             bg_color:    Color::from_u32(0x000000FF),
             fixed_width: false,
-            writer:      core::ptr::null_mut::<TextWriterBase>(),
-            buffer:      arrayvec::ArrayVec::<u16, 512>::default(),
+            buffer:      Default::default(),
         }
     }
 
-    pub fn set_writer(&mut self, writer: *mut TextWriterBase) {
-        self.writer = writer;
-    }
     pub fn set_bg_color(&mut self, clr: u32) {
         self.bg_color = Color::from_u32(clr);
     }
@@ -230,19 +266,26 @@ impl CharWriter {
         self.fixed_width = is_fixed;
     }
 
-    pub fn get_buff_rect(&self) -> Rect {
+    pub fn get_buff_rect(&mut self, writer: *mut TextWriterBase) -> Rect {
         let mut rect = Rect {
             left:   0f32,
             right:  0f32,
             top:    0f32,
             bottom: 0f32,
         };
-        if !self.writer.is_null() {
+        if !writer.is_null() {
+            // ensure line ending
+            if *(self.buffer.last().unwrap()) != 0x0000 {
+                let _ = self.buffer.try_push(0);
+                if let Some(last) = self.buffer.last_mut() {
+                    *last = 0;
+                }
+            }
             unsafe {
                 CalcStringRect_TextWriterBase_WChar(
-                    self.writer,
+                    writer,
                     &mut rect,
-                    self.buffer.as_ptr(),
+                    self.buffer.as_mut_ptr(),
                     self.buffer.len() as _,
                 );
             }
@@ -250,15 +293,44 @@ impl CharWriter {
         rect
     }
 
-    pub fn draw(&self) {
-        if !self.writer.is_null() {
-            let writer: &mut TextWriterBase = unsafe { &mut *self.writer };
-            writer.set_font_color([self.font_color.as_u32(); 2]);
+    pub fn draw(&mut self, writer: *mut TextWriterBase) {
+        // Set background color as it doesnt originally belong in the writer
+        unsafe { BACKGROUND_COLOR = [self.bg_color.as_u32(); 2] };
+
+        // ensure line ending
+        if *(self.buffer.last().unwrap()) != 0x0000 {
+            let _ = self.buffer.try_push(0);
+            if let Some(last) = self.buffer.last_mut() {
+                *last = 0;
+            }
+        }
+
+        if !writer.is_null() {
+            unsafe {
+                (*writer).set_font_color(self.font_color.as_u32(), self.font_color.as_u32());
+                if self.fixed_width {
+                    (*writer).set_fixed_width();
+                }
+                (*writer).print(&self.buffer);
+            }
+        } else {
+            let mut writer = TextWriterBase::new();
+            writer.set_font_color(self.font_color.as_u32(), self.font_color.as_u32());
+            writer.set_position(0f32, 0f32);
             if self.fixed_width {
                 writer.set_fixed_width();
             }
             writer.print(&self.buffer);
-        } else {
         }
     }
+}
+
+pub fn write_to_screen(args: Arguments<'_>, posx: f32, posy: f32) {
+    let mut writer = CharWriter::<512>::new();
+    let _ = writer.write_fmt(args);
+
+    let mut text_writer = TextWriterBase::new();
+    text_writer.set_position(posx, posy);
+
+    writer.draw(&mut text_writer);
 }

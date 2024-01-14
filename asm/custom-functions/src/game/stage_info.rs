@@ -1,6 +1,4 @@
 #![allow(non_upper_case_globals)]
-use core::ffi::CStr;
-use cstr::cstr;
 
 #[derive(Default, Copy, Clone)]
 pub struct StageInfo {

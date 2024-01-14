@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use super::file_manager::FileManager;
+use super::file_manager::{self};
 use core::ffi::{c_ushort, c_void};
 
 #[repr(C)]
@@ -12,8 +12,8 @@ struct FlagSpace {
 
 #[repr(C)]
 pub struct DungeonflagManager {
-    should_commit: bool,
-    flagindex:     c_ushort,
+    pub should_commit: bool,
+    pub flagindex:     c_ushort,
 }
 #[repr(C)]
 pub struct StoryflagManager {
@@ -34,7 +34,6 @@ extern "C" {
     fn FlagManager__setFlagOrCounter(mgr: *mut c_void, flag: u16, value: u16);
 
     fn setStoryflagToValue(flag: u16, value: u16);
-    fn getKeyPieceCount() -> u16;
     static STORYFLAG_MANAGER: *mut StoryflagManager;
     static SCENEFLAG_MANAGER: *mut SceneflagManager;
     static ITEMFLAG_MANAGER: *mut ItemflagManager;
@@ -57,6 +56,14 @@ extern "C" {
 }
 
 impl StoryflagManager {
+    pub fn get_static() -> *mut [u16; 0x80] {
+        unsafe { &mut STATIC_STORYFLAGS }
+    }
+
+    pub fn do_commit() {
+        unsafe { StoryflagManager__doCommit(STORYFLAG_MANAGER) };
+    }
+
     pub fn check(flag: u16) -> bool {
         unsafe { checkStoryflagIsSet(core::ptr::null(), flag) }
     }
@@ -73,6 +80,14 @@ impl StoryflagManager {
 }
 
 impl ItemflagManager {
+    pub fn get_static() -> *mut [u16; 0x40] {
+        unsafe { &mut STATIC_ITEMFLAGS }
+    }
+
+    pub fn do_commit() {
+        unsafe { ItemflagManager__doCommit(ITEMFLAG_MANAGER) };
+    }
+
     pub fn check(flag: u16) -> bool {
         unsafe { AcItem__checkItemFlag(flag) }
     }
@@ -102,6 +117,9 @@ impl SceneflagManager {
 }
 
 impl DungeonflagManager {
+    pub fn get_ptr() -> *mut DungeonflagManager {
+        unsafe { DUNGEONFLAG_MANAGER }
+    }
     /// returns the pointer to the static dungeonflags, those for the current
     /// sceneflagindex
     pub fn get_local() -> *mut [u16; 8] {
@@ -109,7 +127,7 @@ impl DungeonflagManager {
     }
     pub fn get_global(scn_idx: u16) -> *mut [u16; 8] {
         unsafe {
-            (*FileManager::GetDungeonFlags())
+            (*file_manager::get_dungeon_flags())
                 .as_mut_ptr()
                 .add(scn_idx as usize)
         }

@@ -1,5 +1,5 @@
 use crate::system::button::*;
-use crate::system::text_print::TextWriterBase;
+use crate::utils::char_writer::TextWriterBase;
 use wchar::wchz;
 
 struct StickDir {}
@@ -50,39 +50,36 @@ impl DPadDir {
     }
 }
 
-pub struct InputViewer {}
-impl InputViewer {
-    pub fn display() {
-        let mut writer = TextWriterBase::new();
-        writer.set_font_color([0xFFFFFFFF, 0xFFFFFFFF]);
-        writer.set_position(0f32, 0f32);
-        writer.m_char_writer.m_scale = [0.75f32, 0.75f32];
-        writer.print(wchz!(u16, "Inputs: "));
-        StickDir::display(&mut writer);
-        DPadDir::display(&mut writer);
-        if is_down(A) {
-            writer.print_symbol(wchz!(u16, "\x20"));
-        }
-        if is_down(B) {
-            writer.print_symbol(wchz!(u16, "\x21"));
-        }
-        if is_down(PLUS) {
-            writer.print_symbol(wchz!(u16, "\x23"));
-        }
-        if is_down(MINUS) {
-            writer.print_symbol(wchz!(u16, "\x22"));
-        }
-        if is_down(C) {
-            writer.print_symbol(wchz!(u16, "\x26"));
-        }
-        if is_down(Z) {
-            writer.print_symbol(wchz!(u16, "\x27"));
-        }
-        if is_down(ONE) {
-            writer.print_symbol(wchz!(u16, "\x24"));
-        }
-        if is_down(TWO) {
-            writer.print_symbol(wchz!(u16, "\x25"));
-        }
+pub fn display() {
+    let mut writer = TextWriterBase::new();
+    writer.set_font_color(0xFFFFFFFF, 0xFFFFFFFF);
+    writer.set_position(0f32, 0f32);
+    writer.set_scale(0.75f32);
+    writer.print(wchz!(u16, "Inputs: "));
+    StickDir::display(&mut writer);
+    DPadDir::display(&mut writer);
+    if is_down(A) {
+        writer.print_symbol(wchz!(u16, "\x20"));
+    }
+    if is_down(B) {
+        writer.print_symbol(wchz!(u16, "\x21"));
+    }
+    if is_down(PLUS) {
+        writer.print_symbol(wchz!(u16, "\x23"));
+    }
+    if is_down(MINUS) {
+        writer.print_symbol(wchz!(u16, "\x22"));
+    }
+    if is_down(C) {
+        writer.print_symbol(wchz!(u16, "\x26"));
+    }
+    if is_down(Z) {
+        writer.print_symbol(wchz!(u16, "\x27"));
+    }
+    if is_down(ONE) {
+        writer.print_symbol(wchz!(u16, "\x24"));
+    }
+    if is_down(TWO) {
+        writer.print_symbol(wchz!(u16, "\x25"));
     }
 }

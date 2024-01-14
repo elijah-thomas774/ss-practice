@@ -1,8 +1,5 @@
 #![allow(non_snake_case)]
-use core::{
-    ffi::{c_char, c_double, c_ushort, c_void, CStr},
-    ptr, slice,
-};
+use core::ffi::{c_char, c_void, CStr};
 
 #[repr(C)]
 pub struct List {

@@ -1,11 +1,10 @@
-use crate::information::stage_info::*;
+use crate::game::reloader;
+use crate::game::stage_info::*;
 use crate::menus::main_menu::MainMenu;
-use crate::menus::simple_menu::SimpleMenu;
-use crate::system::reloader::Reloader;
-use crate::system::{button::*, reloader};
+use crate::system::button::*;
+use crate::utils::menu::SimpleMenu;
 
-use core::ffi::CStr;
-use cstr::cstr;
+use super::Menu;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 enum WarpState {
@@ -28,9 +27,9 @@ const STAGES: [&StageCategory; 7] = [
 pub struct WarpMenu {
     state:             WarpState,
     stage_selected:    [u8; 8],
-    main_cursor:       u8,
-    stage_cursor:      u8,
-    detail_cursor:     u8,
+    main_cursor:       u32,
+    stage_cursor:      u32,
+    detail_cursor:     u32,
     selected_room:     u8,
     selected_layer:    u8,
     selected_entrance: u8,
@@ -104,20 +103,18 @@ impl WarpMenu {
         };
         let forced_trial: u8 = if self.stage_selected[0] == b'S' { 1 } else { 0 };
         let transition_type = 0;
-        unsafe {
-            reloader::trigger_entrance(
-                self.stage_selected.as_ptr(),
-                room,
-                layer,
-                entrance,
-                forced_night,
-                forced_trial,
-                transition_type,
-                0xF,  // transition_fade_frames:  u8
-                0xFF, // param_9: u8
-            );
-            reloader::set_reload_trigger(5);
-        }
+        reloader::trigger_entrance(
+            self.stage_selected.as_ptr(),
+            room,
+            layer,
+            entrance,
+            forced_night,
+            forced_trial,
+            transition_type,
+            0xF,  // transition_fade_frames:  u8
+            0xFF, // param_9: u8
+        );
+        reloader::set_reload_trigger(5);
     }
 
     fn change_room(&mut self, num: i8) {
@@ -148,98 +145,108 @@ static mut WARP_MENU: WarpMenu = WarpMenu {
     selected_entrance: 0,
 };
 
-impl WarpMenu {
-    fn _input(&mut self) {
+impl Menu for WarpMenu {
+    fn enable() {
+        let warp_menu = unsafe { &mut WARP_MENU };
+        warp_menu.state = WarpState::Main;
+    }
+    fn disable() {
+        let warp_menu = unsafe { &mut WARP_MENU };
+        warp_menu.state = WarpState::Off;
+    }
+
+    fn is_active() -> bool {
+        let warp_menu = unsafe { &mut WARP_MENU };
+        warp_menu.state != WarpState::Off
+    }
+
+    fn input() {
+        let warp_menu = unsafe { &mut WARP_MENU };
+
         let b_pressed = is_pressed(B);
         let a_pressed = is_pressed(A);
-        let up_pressed = is_pressed(DPAD_UP);
-        let down_pressed = is_pressed(DPAD_DOWN);
         let right_pressed = is_pressed(DPAD_RIGHT);
         let left_pressed = is_pressed(DPAD_LEFT);
 
-        let mut next_state = self.state;
-
-        match next_state {
+        match warp_menu.state {
             WarpState::Off => {},
             WarpState::Main => {
                 if b_pressed {
-                    next_state = WarpState::Off;
+                    warp_menu.state = WarpState::Off;
                 } else if a_pressed {
-                    next_state = WarpState::Stage;
+                    warp_menu.state = WarpState::Stage;
                 }
             },
             WarpState::Stage => {
                 if b_pressed {
-                    next_state = WarpState::Main;
+                    warp_menu.state = WarpState::Main;
                 } else if a_pressed {
-                    next_state = WarpState::Details;
+                    warp_menu.state = WarpState::Details;
                 }
             },
             WarpState::Details => {
                 if b_pressed {
-                    next_state = WarpState::Stage;
+                    warp_menu.state = WarpState::Stage;
                 } else if a_pressed {
-                    self.warp();
-                    next_state = WarpState::Off;
+                    warp_menu.warp();
+                    warp_menu.state = WarpState::Off;
                     MainMenu::disable();
                 } else if right_pressed || left_pressed {
-                    match self.detail_cursor {
-                        0 => self.change_room(if right_pressed { 1 } else { -1 }),
-                        1 => self.change_layer(if right_pressed { 1 } else { -1 }),
-                        2 => self.change_entrance(if right_pressed { 1 } else { -1 }),
+                    match warp_menu.detail_cursor {
+                        0 => warp_menu.change_room(if right_pressed { 1 } else { -1 }),
+                        1 => warp_menu.change_layer(if right_pressed { 1 } else { -1 }),
+                        2 => warp_menu.change_entrance(if right_pressed { 1 } else { -1 }),
                         _ => {},
                     }
                 }
             },
         }
-        self.state = next_state;
     }
 
-    fn _display(&mut self) {
-        match self.state {
+    fn display() {
+        let warp_menu = unsafe { &mut WARP_MENU };
+
+        match warp_menu.state {
             WarpState::Off => {},
             WarpState::Main => {
-                let mut menu =
-                    SimpleMenu::<{ STAGES.len() }, 25>::new(10f32, 10f32, 10, "Warp Menu");
+                let mut menu: SimpleMenu<{ STAGES.len() }> = SimpleMenu::new();
+                menu.set_heading("Warp Menu");
+                menu.set_cursor(warp_menu.main_cursor);
                 for stage in STAGES {
                     menu.add_entry(stage.name);
                 }
-                self.main_cursor = menu.move_cursor(self.main_cursor.into()) as u8;
                 menu.draw();
+
+                warp_menu.main_cursor = menu.move_cursor();
             },
             WarpState::Stage => {
-                let stage_ref = STAGES[self.main_cursor as usize];
-                let mut menu = SimpleMenu::<30, 25>::new(10f32, 10f32, 10, stage_ref.name);
+                let stage_ref = STAGES[warp_menu.main_cursor as usize];
+                let mut menu: SimpleMenu<30> = SimpleMenu::new();
+                menu.set_heading(stage_ref.name);
+                menu.set_cursor(warp_menu.stage_cursor);
                 for stage in stage_ref.stages {
                     menu.add_entry(stage.name);
                 }
-                self.stage_cursor = menu.move_cursor(self.stage_cursor.into()) as u8;
                 menu.draw();
+
+                warp_menu.stage_cursor = menu.move_cursor();
             },
             WarpState::Details => {
-                let mut detail_menu =
-                    SimpleMenu::<5, 25>::new(10f32, 10f32, 10, self.get_stage().name);
-                let (room, layer, entrance) =
-                    (self.get_room(), self.get_layer(), self.get_entrance());
-                detail_menu.add_entry_args(format_args!("Room: {room}"));
-                detail_menu.add_entry_args(format_args!("Layer: {layer}"));
-                detail_menu.add_entry_args(format_args!("Entrance: {entrance}"));
-                self.detail_cursor = detail_menu.move_cursor(self.detail_cursor.into()) as u8;
-                detail_menu.draw();
+                let mut menu: SimpleMenu<5> = SimpleMenu::new();
+                menu.set_heading(warp_menu.get_stage().name);
+                menu.set_cursor(warp_menu.detail_cursor);
+                let (room, layer, entrance) = (
+                    warp_menu.get_room(),
+                    warp_menu.get_layer(),
+                    warp_menu.get_entrance(),
+                );
+                menu.add_entry_fmt(format_args!("Room: {room}"));
+                menu.add_entry_fmt(format_args!("Layer: {layer}"));
+                menu.add_entry_fmt(format_args!("Entrance: {entrance}"));
+                menu.draw();
+
+                warp_menu.detail_cursor = menu.move_cursor();
             },
         }
-    }
-    pub fn enable() {
-        unsafe { WARP_MENU.state = WarpState::Main };
-    }
-    pub fn input() -> bool {
-        unsafe {
-            WARP_MENU._input();
-            WARP_MENU.state == WarpState::Off
-        }
-    }
-
-    pub fn display() {
-        unsafe { WARP_MENU._display() };
     }
 }
