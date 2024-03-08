@@ -111,6 +111,10 @@ pub fn get_num_heaps() -> u16 {
     unsafe { HEAP_LIST.count }
 }
 
+pub fn get_heap_idx(idx: u16) -> Option<&'static mut Heap> {
+    unsafe { HEAP_LIST.get_idx(idx) }
+}
+
 pub fn get_root_heap_mem1() -> *mut Heap {
     unsafe { HEAP_MEM1 }
 }

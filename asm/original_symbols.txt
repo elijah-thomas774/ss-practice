@@ -44,6 +44,7 @@ main.dol:
     CURRENT_HEAP: 0x80576740
     HEAP_MEM1: 0x8057522c
     HEAP_MEM2: 0x80575230
+    HEAP_LIST: 0x80673ae8
     Heap__alloc: 0x80495560
     requestFileLoadFromDisk: 0x802f0060
     getAnmTexPatFromBrres: 0x80439890
