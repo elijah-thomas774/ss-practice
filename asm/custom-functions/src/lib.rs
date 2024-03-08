@@ -1,6 +1,7 @@
 #![no_std]
 #![feature(split_array)]
 #![feature(const_trait_impl)]
+#![allow(dead_code)]
 
 mod game;
 mod live_info;

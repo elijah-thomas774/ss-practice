@@ -8,4 +8,14 @@
 .org @MainInjection
 bl custom_main_additions
 
+
+;.org 0x80064660
+;lis r3, 0x16
+
+;.org 0x80064690
+;lis r3, 0x60
+
+;.org 0x800646a0
+;lis r3, 0xD0
+
 .close

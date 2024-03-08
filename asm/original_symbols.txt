@@ -65,6 +65,7 @@ main.dol:
     FlagManager__setFlagOrCounter: 0x800bf530
     FlagManager__setFlagTo1: 0x800bf5b0
     FlagManager__getUncommittedFlags: 0x800bf5f0
+    FlagManger__copyAllFromSave: 0x800c01f0
     ItemflagManager__doCommit: 0x800c03f0
     StoryflagManager__doCommit: 0x800c0460
     # storyflag in r4
@@ -84,10 +85,11 @@ main.dol:
     Reloader__setReloadTrigger: 0x801bad90
     Reloader__triggerEntrance: 0x801bafa0
     Reloader__triggerExit: 0x801bb080
-    # stage
     isCurrentStage: 0x801bb3c0
     actuallyTriggerEntrance: 0x801bb5d0
     RELOADER_PTR: 0x80575794
+    RELOADER_TYPE: 0x8057579d
+    SPAWN_MASTER: 0x805b388c
     SPAWN_SLAVE: 0x805b3860
     # --------------- ITEMS -----------------------------------
     AcItem__spawnItem: 0x802487c0

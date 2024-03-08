@@ -21,7 +21,14 @@ pub struct StoryflagManager {
 }
 #[repr(C)]
 pub struct SceneflagManager {
-    sceneflags: FlagSpace,
+    sceneflags:    FlagSpace,
+    tempflags:     FlagSpace,
+    zoneflags:     FlagSpace,
+    flag_helper:   u8,
+    field_0x25:    u8,
+    scene_idx:     u16,
+    should_commit: bool,
+    pad:           [u8; 3],
 }
 #[repr(C)]
 pub struct ItemflagManager {
@@ -32,7 +39,7 @@ extern "C" {
     fn FlagManager__setFlagTo1(mgr: *mut c_void, flag: u16);
     fn FlagManager__getFlagOrCounter(mgr: *mut c_void, flag: u16) -> u16;
     fn FlagManager__setFlagOrCounter(mgr: *mut c_void, flag: u16, value: u16);
-
+    fn FlagManger__copyAllFromSave();
     fn setStoryflagToValue(flag: u16, value: u16);
     static STORYFLAG_MANAGER: *mut StoryflagManager;
     static SCENEFLAG_MANAGER: *mut SceneflagManager;
@@ -107,12 +114,29 @@ impl SceneflagManager {
     pub fn unset_global(scn_idx: u16, flag: u16) {
         unsafe { SceneflagManager__unsetFlagGlobal(SCENEFLAG_MANAGER, scn_idx, flag) };
     }
-    pub fn get_flags() -> *const [u16] {
-        let t = unsafe { &*SCENEFLAG_MANAGER };
+    pub fn get_scene_flags() -> *const [u16] {
+        let t = unsafe { SCENEFLAG_MANAGER.as_ref().unwrap() };
         return core::ptr::slice_from_raw_parts::<u16>(
             t.sceneflags.flag_ptr,
             t.sceneflags.flag_count.into(),
         );
+    }
+    pub fn get_temp_flags() -> *const [u16] {
+        let t = unsafe { SCENEFLAG_MANAGER.as_ref().unwrap() };
+        return core::ptr::slice_from_raw_parts::<u16>(
+            t.tempflags.flag_ptr,
+            t.tempflags.flag_count.into(),
+        );
+    }
+    pub fn get_zone_flags() -> *const [u16] {
+        let t = unsafe { SCENEFLAG_MANAGER.as_ref().unwrap() };
+        return core::ptr::slice_from_raw_parts::<u16>(
+            t.zoneflags.flag_ptr,
+            t.zoneflags.flag_count.into(),
+        );
+    }
+    pub fn get_scene_idx() -> u16 {
+        unsafe { (*SCENEFLAG_MANAGER).scene_idx }
     }
 }
 
@@ -135,4 +159,8 @@ impl DungeonflagManager {
     pub fn get_global_key_count(scn_idx: u16) -> u16 {
         unsafe { (*Self::get_global(scn_idx))[1] & 0xF }
     }
+}
+
+pub fn copy_all_managers_from_save() {
+    unsafe { FlagManger__copyAllFromSave() };
 }

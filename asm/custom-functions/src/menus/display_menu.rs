@@ -50,6 +50,9 @@ impl super::Menu for DisplayMenu {
                             2 => {
                                 live_info::SCENE_FLAG_VIEWER = !live_info::SCENE_FLAG_VIEWER;
                             },
+                            3 => {
+                                live_info::HEAP_VIEWER = !live_info::HEAP_VIEWER;
+                            },
                             _ => {},
                         }
                     }
@@ -82,6 +85,14 @@ impl super::Menu for DisplayMenu {
         menu.add_entry_fmt(format_args!(
             "Scene Flag Viewer [{}]",
             if unsafe { live_info::SCENE_FLAG_VIEWER } {
+                "x"
+            } else {
+                " "
+            }
+        ));
+        menu.add_entry_fmt(format_args!(
+            "Heap Viewer [{}]",
+            if unsafe { live_info::HEAP_VIEWER } {
                 "x"
             } else {
                 " "

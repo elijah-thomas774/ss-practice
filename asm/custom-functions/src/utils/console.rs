@@ -2,6 +2,8 @@ use core::fmt::Write;
 
 use crate::utils::char_writer::{CharWriter, TextWriterBase};
 
+const WRITER_BUFFER_SIZE: usize = 1536;
+
 pub struct Console {
     pos:          [f32; 2],
     size:         [f32; 2],
@@ -9,7 +11,7 @@ pub struct Console {
     bg_color:     u32,
     font_color:   u32,
     dynamic_size: bool,
-    buffer:       CharWriter<512>,
+    pub buffer:   CharWriter<WRITER_BUFFER_SIZE>,
 }
 
 impl Write for Console {
@@ -26,7 +28,7 @@ impl Console {
             bg_color:     0x0000003F,
             font_color:   0x000000FF,
             dynamic_size: false,
-            buffer:       CharWriter::<512>::new(),
+            buffer:       CharWriter::<WRITER_BUFFER_SIZE>::new(),
         }
     }
 
@@ -38,7 +40,7 @@ impl Console {
             bg_color:     0x0000003F,
             font_color:   0x000000FF,
             dynamic_size: true,
-            buffer:       CharWriter::<512>::new(),
+            buffer:       CharWriter::<WRITER_BUFFER_SIZE>::new(),
         }
     }
 

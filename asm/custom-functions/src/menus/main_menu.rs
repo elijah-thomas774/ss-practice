@@ -3,7 +3,7 @@ use super::display_menu::DisplayMenu;
 use super::heap_menu::HeapMenu;
 use super::warp_menu::WarpMenu;
 use crate::system::button::*;
-use crate::utils::char_writer::{write_to_screen, CharWriter, TextWriterBase};
+use crate::utils::char_writer::TextWriterBase;
 use crate::utils::graphics::draw_rect;
 use crate::utils::menu::SimpleMenu;
 
@@ -25,8 +25,8 @@ impl MenuState {
             0 => MenuState::DisplayMenu,
             1 => MenuState::WarpMenu,
             2 => MenuState::HeapMenu,
-            3 => MenuState::HeapMenu,
-            _ => MenuState::ActionMenu,
+            3 => MenuState::ActionMenu,
+            _ => MenuState::MenuSelect,
         }
     }
 }
@@ -57,7 +57,8 @@ impl super::Menu for MainMenu {
     }
     fn disable() {
         unsafe { MAIN_MENU.force_close = true };
-        set_buttons_not_pressed(Buttons::ONE | Buttons::TWO);
+        // Removes possible interaction with the game
+        set_buttons_not_pressed(Buttons::B | Buttons::A);
     }
     fn input() {
         let main_menu = unsafe { &mut MAIN_MENU };

@@ -45,6 +45,15 @@ extern "C" {
 pub fn get_ptr() -> *mut FileManager {
     unsafe { FILE_MANAGER }
 }
+
+pub fn get_file_A() -> &'static mut SaveFile {
+    unsafe { &mut (*FILE_MANAGER).FA }
+}
+
+pub fn get_file_B() -> &'static mut SaveFile {
+    unsafe { &mut (*FILE_MANAGER).FB }
+}
+
 pub fn get_dungeon_flags() -> *mut [[c_ushort; 8]; 22] {
     unsafe { FileManager__getDungeonFlags(FILE_MANAGER) }
 }

@@ -1,6 +1,9 @@
+use core::fmt::Write;
+
 use crate::system::button::*;
 use crate::system::heap::*;
 use crate::utils::char_writer::write_to_screen;
+use crate::utils::console::Console;
 use crate::utils::menu::SimpleMenu;
 
 use cstr::cstr;
@@ -73,18 +76,41 @@ impl super::Menu for HeapMenu {
                 heap_menu.cursor = menu.move_cursor();
             },
             HeapMenuState::Sub => {
-                let heap_name = unsafe {
+                let heap = unsafe {
                     match heap_menu.cursor {
-                        0 => (*get_root_heap_mem1()).get_name(),
-                        1 => (*get_root_heap_mem2()).get_name(),
-                        _ => cstr!(""),
+                        0 => get_root_heap_mem1().as_ref(),
+                        1 => get_root_heap_mem2().as_ref(),
+                        _ => get_root_heap_mem1().as_ref(),
                     }
+                    .unwrap()
                 };
-                write_to_screen(
-                    format_args!("Heap Name: {:<20}", heap_name.to_str().unwrap()),
-                    0f32,
-                    0f32,
-                );
+                let heap_name = heap.get_name();
+                let (size, free) = (heap.get_total_size(), heap.get_free_size());
+                let List::<Heap> { count, .. } = heap.children;
+
+                let mut console = Console::with_pos_and_size(0f32, 0f32, 120f32, 85f32);
+                console.set_bg_color(0x0000007F);
+                console.set_font_color(0xFFFFFFFF);
+                console.set_font_size(0.25f32);
+                console.set_dynamic_size(true);
+                let _ = console.write_fmt(format_args!(
+                    "Heap Name: {:<20}\n Size: {size}\n Free: {free}\nNum Children: {count}\n",
+                    heap_name
+                ));
+
+                for i in 0..count {
+                    let child = heap.children.get_idx(i);
+                    if let Some(child) = child {
+                        let _ = console.write_fmt(format_args!(
+                            "{i}: {:6.2}% of ({:>8}) {:<20}\n",
+                            (child.get_free_size() as f32) * 100.0f32
+                                / (child.get_total_size() as f32),
+                            child.get_total_size(),
+                            child.get_name(),
+                        ));
+                    }
+                }
+                console.draw();
             },
         }
     }

@@ -7,7 +7,7 @@ use crate::system::{button::*, gx::Color};
 
 use super::char_writer::{CharWriter, TextWriterBase};
 
-const DEFAULT_LINE_SIZE: usize = 64;
+const DEFAULT_LINE_SIZE: usize = 72;
 
 pub struct SimpleMenu<const NUM_LINES: usize> {
     pos:            [f32; 2],
@@ -16,7 +16,7 @@ pub struct SimpleMenu<const NUM_LINES: usize> {
     max_view_lines: u32,
     cursor:         u32,
     heading:        CharWriter<DEFAULT_LINE_SIZE>,
-    lines:          ArrayVec<CharWriter<DEFAULT_LINE_SIZE>, NUM_LINES>,
+    pub lines:      ArrayVec<CharWriter<DEFAULT_LINE_SIZE>, NUM_LINES>,
 }
 
 impl<const NUM_LINES: usize> SimpleMenu<NUM_LINES> {
