@@ -1,3 +1,6 @@
+extern crate alloc;
+use alloc::{boxed::Box, vec::Vec};
+
 use crate::system::heap::*;
 use core::fmt::Write;
 
@@ -52,5 +55,51 @@ pub fn disp_heaps() {
             print_heap_info(&mut console, child, i);
         }
     }
+
+    if let Some(work2) = get_heap_idx(17) {
+        let _ = console.write_fmt(format_args!("Work2  PreAlloc: {}\n", work2.get_free_size()));
+        {
+            let b = Box::new_in(1234, work2);
+            let _ = console.write_fmt(format_args!(
+                "Work2 PostAlloc: {}, {b:#?}, {:?}\n",
+                work2.get_free_size(),
+                b.as_ref() as *const i32
+            ));
+        }
+
+        {
+            let mut b = Vec::<usize>::with_capacity(2);
+            let _ = console.write_fmt(format_args!(
+                "Vec Test (None): ptr({:?}) Space Left({}) Capacity({}) Vec({b:?})\n",
+                b.as_ptr() as *const i32,
+                work2.get_free_size(),
+                b.capacity(),
+            ));
+            b.push(0);
+            let _ = console.write_fmt(format_args!(
+                "Vec Test (p(0)): ptr({:?}) Space Left({}) Capacity({}) Vec({b:?})\n",
+                b.as_ptr() as *const i32,
+                work2.get_free_size(),
+                b.capacity(),
+            ));
+            b.push(1);
+            let _ = console.write_fmt(format_args!(
+                "Vec Test (p(1)): ptr({:?}) Space Left({}) Capacity({}) Vec({b:?})\n",
+                b.as_ptr() as *const i32,
+                work2.get_free_size(),
+                b.capacity(),
+            ));
+            b.push(2);
+            let _ = console.write_fmt(format_args!(
+                "Vec Test (p(2)): ptr({:?}) Space Left({}) Capacity({}) Vec({b:?})\n",
+                b.as_ptr() as *const i32,
+                work2.get_free_size(),
+                b.capacity(),
+            ));
+        }
+
+        let _ = console.write_fmt(format_args!("Work2  PostFree: {}\n", work2.get_free_size()));
+    }
+
     console.draw();
 }

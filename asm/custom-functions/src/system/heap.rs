@@ -1,9 +1,12 @@
 #![allow(non_snake_case)]
 use core::{
-    ffi::{c_char, c_void, CStr},
-    num, slice,
+    alloc::{AllocError, Allocator, GlobalAlloc},
+    ffi::{c_char, c_void},
+    ptr::NonNull,
+    slice,
 };
 
+use super::printf;
 pub struct Node<T> {
     pub prev: *mut T,
     pub next: *mut T,
@@ -18,7 +21,7 @@ pub struct List<T> {
 }
 
 impl<T> List<T> {
-    pub fn get_idx(&self, idx: u16) -> Option<&'static mut T> {
+    pub fn get_idx(&self, idx: u16) -> Option<&'static T> {
         if idx >= self.count {
             return None;
         }
@@ -36,7 +39,7 @@ impl<T> List<T> {
             }
         }
 
-        return unsafe { entry.as_mut() };
+        return unsafe { entry.as_ref() };
     }
 }
 
@@ -57,8 +60,8 @@ pub struct HeapVtbl {
     pub dtor:               unsafe extern "C" fn(This: *mut Heap),
     pub getHeapKind:        unsafe extern "C" fn(This: *mut Heap),
     pub initAllocator:      unsafe extern "C" fn(This: *mut Heap, allocator: u32, alignment: i32),
-    pub alloc:              unsafe extern "C" fn(This: *mut Heap, u32, u32),
-    pub free:               unsafe extern "C" fn(This: *mut Heap, *mut c_void),
+    pub alloc:              unsafe extern "C" fn(This: *const Heap, u32, u32) -> *mut u8,
+    pub free:               unsafe extern "C" fn(This: *const Heap, *const u8),
     pub destroy:            unsafe extern "C" fn(This: *mut Heap),
     pub resizeForMBlock:    unsafe extern "C" fn(This: *mut Heap),
     pub getTotalSize:       unsafe extern "C" fn(This: *const Heap) -> u32,
@@ -68,7 +71,7 @@ pub struct HeapVtbl {
 
 #[repr(C)]
 pub struct Heap {
-    pub vtable:       *const HeapVtbl,
+    pub vtable:       &'static HeapVtbl,
     pub contain_heap: *mut Heap,
     pub link:         [u32; 2], // node
     pub heap_handle:  *const MEMiHeapHead,
@@ -99,7 +102,7 @@ impl Heap {
 }
 
 extern "C" {
-    static mut CURRENT_HEAP: *mut Heap;
+    static CURRENT_HEAP: *const Heap;
     static HEAP_MEM1: *mut Heap;
     static HEAP_MEM2: *mut Heap;
     static HEAP_LIST: List<Heap>;
@@ -107,11 +110,57 @@ extern "C" {
 
 }
 
+struct HeapAllocator;
+#[global_allocator]
+static GLOBAL_ALLOCATOR: HeapAllocator = HeapAllocator;
+
+unsafe impl Sync for HeapAllocator {}
+unsafe impl GlobalAlloc for HeapAllocator {
+    unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
+        unsafe {
+            super::printf(
+                b"Allocating on: %s\0".as_ptr() as *const i8,
+                get_heap_idx(17).unwrap().get_name().as_ptr(),
+            )
+        };
+        get_heap_idx(17)
+            .unwrap()
+            .allocate(layout)
+            .unwrap()
+            .as_mut_ptr()
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: core::alloc::Layout) {
+        get_heap_idx(17)
+            .unwrap()
+            .deallocate(NonNull::new(ptr).unwrap(), layout)
+    }
+}
+
+unsafe impl Allocator for Heap {
+    fn allocate(&self, layout: core::alloc::Layout) -> Result<NonNull<[u8]>, AllocError> {
+        let data_ptr = unsafe {
+            NonNull::new_unchecked((self.vtable.alloc)(
+                self,
+                layout.size() as u32,
+                layout.align() as u32,
+            ))
+        };
+
+        Ok(NonNull::slice_from_raw_parts(data_ptr, layout.size()))
+    }
+
+    unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: core::alloc::Layout) {
+        let _ = layout;
+        unsafe { (self.vtable.free)(self, ptr.as_ptr()) }
+    }
+}
+
 pub fn get_num_heaps() -> u16 {
     unsafe { HEAP_LIST.count }
 }
 
-pub fn get_heap_idx(idx: u16) -> Option<&'static mut Heap> {
+pub fn get_heap_idx(idx: u16) -> Option<&'static Heap> {
     unsafe { HEAP_LIST.get_idx(idx) }
 }
 

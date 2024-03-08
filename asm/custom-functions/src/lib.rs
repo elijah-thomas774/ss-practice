@@ -1,7 +1,9 @@
 #![no_std]
+#![feature(allocator_api)]
 #![feature(split_array)]
 #![feature(const_trait_impl)]
 #![allow(dead_code)]
+#![feature(slice_ptr_get)]
 
 mod game;
 mod live_info;

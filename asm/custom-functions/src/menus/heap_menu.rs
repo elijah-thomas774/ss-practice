@@ -1,14 +1,9 @@
 use core::ffi::c_double;
 use core::ffi::c_uint;
-use core::fmt::Write;
 
 use crate::system::button::*;
 use crate::system::heap::*;
-use crate::utils::char_writer::write_to_screen;
-use crate::utils::console::Console;
 use crate::utils::menu::SimpleMenu;
-
-use cstr::cstr;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum HeapMenuState {
