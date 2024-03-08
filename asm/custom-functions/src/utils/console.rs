@@ -1,6 +1,8 @@
-use core::{fmt::Write, ops::Deref};
+use core::fmt::Write;
 
-use crate::system::text_print::{TextWriterBase, WCharWriter};
+use crate::utils::char_writer::{CharWriter, TextWriterBase};
+
+const WRITER_BUFFER_SIZE: usize = 1536;
 
 pub struct Console {
     pos:          [f32; 2],
@@ -9,7 +11,7 @@ pub struct Console {
     bg_color:     u32,
     font_color:   u32,
     dynamic_size: bool,
-    buffer:       WCharWriter<512>,
+    pub buffer:   CharWriter<WRITER_BUFFER_SIZE>,
 }
 
 impl Write for Console {
@@ -26,7 +28,7 @@ impl Console {
             bg_color:     0x0000003F,
             font_color:   0x000000FF,
             dynamic_size: false,
-            buffer:       WCharWriter::<512>::new(),
+            buffer:       CharWriter::<WRITER_BUFFER_SIZE>::new(),
         }
     }
 
@@ -38,36 +40,8 @@ impl Console {
             bg_color:     0x0000003F,
             font_color:   0x000000FF,
             dynamic_size: true,
-            buffer:       WCharWriter::<512>::new(),
+            buffer:       CharWriter::<WRITER_BUFFER_SIZE>::new(),
         }
-    }
-
-    fn resize_bounds(&mut self, font_width: f32, font_height: f32) {
-        // Find num Lines (number of \n + 1)
-        let mut num_lines = 1;
-        let mut longest_line = 0;
-        let mut curr_len = 0;
-        for c in self.buffer.buf.iter() {
-            if *c == 0x000A {
-                num_lines += 1;
-                if curr_len > longest_line {
-                    longest_line = curr_len
-                }
-                curr_len = 0;
-            } else {
-                curr_len += 1;
-            }
-        }
-        // If it doesnt end in new line
-        if curr_len > longest_line {
-            longest_line = curr_len;
-        }
-
-        // Set size
-        self.size = [
-            4f32 + longest_line as f32 * font_width,
-            4f32 + num_lines as f32 * font_height,
-        ];
     }
 
     pub fn set_dynamic_size(&mut self, val: bool) {
@@ -88,13 +62,15 @@ impl Console {
 
     pub fn draw(&mut self) {
         let mut writer = TextWriterBase::new();
-        writer.set_font_color([self.font_color; 2]);
-        writer.m_char_writer.m_scale = [self.font_size; 2];
-        if self.dynamic_size {
-            self.resize_bounds(writer.get_font_width(), writer.get_font_height());
-        }
+        writer.set_font_color(self.font_color, self.font_color);
+        writer.set_scale(self.font_size);
         writer.set_fixed_width();
-        crate::menus::main_menu::draw_rect(
+        // Set size
+        if self.dynamic_size {
+            let rect = self.buffer.get_buff_rect(&mut writer);
+            self.size = [4f32 + rect.right - rect.left, 4f32 + rect.bottom - rect.top];
+        }
+        crate::utils::graphics::draw_rect(
             self.pos[0],
             self.pos[1],
             self.size[0],

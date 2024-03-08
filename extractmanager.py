@@ -42,10 +42,6 @@ class ExtractManager:
             dest_path = self.rootpath / "actual-extract"
             extractor = disc_riider_py.WiiIsoExtractor(iso_path)
             extractor.prepare_extract_section("DATA")
-            # remove hint videos, but keep credits
-            extractor.remove_files_by_callback(
-                "DATA", lambda x: x.startswith("THP") and not "Demo" in x
-            )
             checksum = bytes(extractor.get_dol_hash("DATA")).hex()
             if CLEAN_NTSC_U_1_00_DOL_HASH != checksum:
                 if wrong_version := WRONG_VERSION_DOL_HASHES.get(checksum):

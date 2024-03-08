@@ -1,6 +1,9 @@
 #![allow(non_camel_case_types)]
-
+#![allow(non_snake_case)]
+#![allow(unused)]
 use core::ffi::c_void;
+
+use super::math::{Matrix34f, Matrix44f};
 #[repr(C)]
 pub enum GXPrimitive {
     GX_QUADS         = 0x80, // 0x80
@@ -499,35 +502,32 @@ pub enum GXClipMode {
     GX_CLIP_DISABLE, // 0x1
 }
 
-#[repr(C)]
-pub struct Matrix {
-    pub mtx: [[f32; 4]; 3],
+#[derive(Clone, Copy)]
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
 }
-
-#[repr(C)]
-#[derive(Default)]
-pub struct MTX44 {
-    pub mtx: [f32; 16],
-}
-
-#[repr(C)]
-pub union GXFifo {
-    uint:  u32,
-    float: f32,
+impl Color {
+    pub fn from_u32(clr: u32) -> Self {
+        Self {
+            r: (clr >> 24) as _,
+            g: (clr >> 16) as _,
+            b: (clr >> 08) as _,
+            a: (clr >> 00) as _,
+        }
+    }
+    pub fn as_u32(&self) -> u32 {
+        return ((self.r as u32) << 24)
+            | ((self.g as u32) << 16)
+            | ((self.b as u32) << 8)
+            | ((self.a as u32) << 0);
+    }
 }
 
 extern "C" {
-    pub fn C_MTXOrtho(
-        m: *mut MTX44,
-        top: f32,
-        bottom: f32,
-        left: f32,
-        right: f32,
-        near: f32,
-        far: f32,
-    );
-    pub fn PSMTXIdentity(mtx: *mut Matrix);
-    pub fn GXSetProjection(mtx: *const MTX44, _: u32);
+    pub fn GXSetProjection(mtx: *const Matrix44f, _: u32);
     pub fn GXSetViewport(
         x_orig: f32,
         y_orig: f32,
@@ -539,10 +539,16 @@ extern "C" {
     pub fn GXSetScissor(left: u32, top: u32, width: u32, height: u32);
     pub fn GXBegin(_: GXPrimitive, _: GXVtxFmt, _: u16);
     pub fn GXSetVtxAttrFmt(_: GXVtxFmt, _: GXAttr, _: GXCompCnt, _: GXCompType, _: u8);
-    pub fn GXLoadPosMtxImm(mtx: *mut Matrix, id: u32);
+    pub fn GXLoadPosMtxImm(mtx: *mut Matrix34f, id: u32);
     pub fn GXSetCurrentMtx(id: u32);
     pub fn GXInvalidateVtxCache();
-    pub fn GXSetAlphaCompare(compare1: u32, param2: u8, alphaop: u32, compare2: u32, param5: u8);
+    pub fn GXSetAlphaCompare(
+        compare1: GXCompare,
+        param2: u8,
+        alphaop: GXAlphaOp,
+        compare2: GXCompare,
+        param5: u8,
+    );
     pub fn GXSetNumIndStages(num: u8);
     pub fn GXSetVtxDesc(_: GXAttr, _: GXAttrType);
     pub fn GXClearVtxDesc();

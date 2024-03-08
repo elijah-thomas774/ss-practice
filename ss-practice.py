@@ -109,7 +109,7 @@ class GamePatcher:
 
 if __name__ == "__main__":
     extract = ExtractManager(ROOT_PATH)
-    # extract.extract_game()
+    # extract.extract_game("D:\\Dolphin_Games\\games\\SOUJ01.iso")
     patcher = GamePatcher(ROOT_PATH / "actual-extract", ROOT_PATH / "modified-extract")
     patcher.do_all_gamepatches()
     print("Done")

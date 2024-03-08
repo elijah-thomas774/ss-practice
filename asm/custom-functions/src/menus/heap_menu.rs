@@ -1,8 +1,10 @@
-use super::simple_menu::SimpleMenu;
-use crate::menus::main_menu::MainMenu;
+use core::fmt::Write;
+
 use crate::system::button::*;
 use crate::system::heap::*;
-use crate::system::text_print::write_to_screen;
+use crate::utils::char_writer::write_to_screen;
+use crate::utils::console::Console;
+use crate::utils::menu::SimpleMenu;
 
 use cstr::cstr;
 
@@ -18,19 +20,35 @@ pub struct HeapMenu {
     cursor: u32,
 }
 
-impl HeapMenu {
-    fn _input(&mut self) {
-        let mut next_state = self.state;
+#[no_mangle]
+#[link_section = "data"]
+static mut HEAP_MENU: HeapMenu = HeapMenu {
+    state:  HeapMenuState::Off,
+    cursor: 0,
+};
 
-        match self.state {
+impl super::Menu for HeapMenu {
+    fn enable() {
+        let heap_menu = unsafe { &mut HEAP_MENU };
+        heap_menu.state = HeapMenuState::Main;
+    }
+
+    fn disable() {
+        let heap_menu = unsafe { &mut HEAP_MENU };
+        heap_menu.state = HeapMenuState::Off;
+    }
+    fn input() {
+        let heap_menu = unsafe { &mut HEAP_MENU };
+
+        match heap_menu.state {
             HeapMenuState::Off => {},
             HeapMenuState::Main => {
                 if is_pressed(B) {
-                    next_state = HeapMenuState::Off;
+                    heap_menu.state = HeapMenuState::Off;
                 } else if is_pressed(A) {
-                    match self.cursor {
+                    match heap_menu.cursor {
                         0 | 1 => {
-                            next_state = HeapMenuState::Sub;
+                            heap_menu.state = HeapMenuState::Sub;
                         },
                         _ => {},
                     }
@@ -38,61 +56,67 @@ impl HeapMenu {
             },
             HeapMenuState::Sub => {
                 if is_pressed(B) {
-                    next_state = HeapMenuState::Main;
+                    heap_menu.state = HeapMenuState::Main;
                 }
             },
         }
-        self.state = next_state;
     }
+    fn display() {
+        let heap_menu = unsafe { &mut HEAP_MENU };
 
-    fn _display(&mut self) {
-        match self.state {
+        match heap_menu.state {
             HeapMenuState::Off => {},
             HeapMenuState::Main => {
-                let mut menu = SimpleMenu::<3, 20>::new(10f32, 10f32, 10, "Heap Menu");
+                let mut menu: SimpleMenu<3> = SimpleMenu::new();
+                menu.set_heading("Heap Menu");
+                menu.set_cursor(heap_menu.cursor);
                 menu.add_entry("Root Heap MEM1");
                 menu.add_entry("Root Heap MEM2");
-                self.cursor = menu.move_cursor(self.cursor);
                 menu.draw();
+                heap_menu.cursor = menu.move_cursor();
             },
             HeapMenuState::Sub => {
-                let heap_name = unsafe {
-                    match self.cursor {
-                        0 => (*get_root_heap_mem1()).get_name(),
-                        1 => (*get_root_heap_mem2()).get_name(),
-                        _ => cstr!(""),
+                let heap = unsafe {
+                    match heap_menu.cursor {
+                        0 => get_root_heap_mem1().as_ref(),
+                        1 => get_root_heap_mem2().as_ref(),
+                        _ => get_root_heap_mem1().as_ref(),
                     }
+                    .unwrap()
                 };
-                write_to_screen(
-                    format_args!("Heap Name: {:<20}", heap_name.to_str().unwrap()),
-                    0f32,
-                    0f32,
-                );
+                let heap_name = heap.get_name();
+                let (size, free) = (heap.get_total_size(), heap.get_free_size());
+                let List::<Heap> { count, .. } = heap.children;
+
+                let mut console = Console::with_pos_and_size(0f32, 0f32, 120f32, 85f32);
+                console.set_bg_color(0x0000007F);
+                console.set_font_color(0xFFFFFFFF);
+                console.set_font_size(0.25f32);
+                console.set_dynamic_size(true);
+                let _ = console.write_fmt(format_args!(
+                    "Heap Name: {:<20}\n Size: {size}\n Free: {free}\nNum Children: {count}\n",
+                    heap_name
+                ));
+
+                for i in 0..count {
+                    let child = heap.children.get_idx(i);
+                    if let Some(child) = child {
+                        let _ = console.write_fmt(format_args!(
+                            "{i}: {:6.2}% of ({:>8}) {:<20}\n",
+                            (child.get_free_size() as f32) * 100.0f32
+                                / (child.get_total_size() as f32),
+                            child.get_total_size(),
+                            child.get_name(),
+                        ));
+                    }
+                }
+                console.draw();
             },
         }
     }
-}
 
-#[link_section = "data"]
-#[no_mangle]
-pub static mut HEAP_MENU: HeapMenu = HeapMenu {
-    state:  HeapMenuState::Off,
-    cursor: 0,
-};
-
-impl HeapMenu {
-    pub fn enable() {
-        unsafe { HEAP_MENU.state = HeapMenuState::Main };
-    }
-    // returns true if in off state
-    pub fn input() -> bool {
-        unsafe {
-            HEAP_MENU._input();
-            return HEAP_MENU.state == HeapMenuState::Off;
-        }
-    }
-
-    pub fn display() {
-        unsafe { HEAP_MENU._display() };
+    fn is_active() -> bool {
+        let heap_menu = unsafe { &mut HEAP_MENU };
+        heap_menu.state != HeapMenuState::Off
     }
 }
